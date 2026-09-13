@@ -1,4 +1,4 @@
-﻿let transfers = [];
+let transfers = [];
 
 let beforePhotoData = createEmptyPhotos();
 let afterPhotoData = createEmptyPhotos();
@@ -52,6 +52,7 @@ function normalizePhotos(photos) {
         return result;
     }
 
+
     photoTypes.forEach(type => {
 
         if (Array.isArray(photos[type])) {
@@ -63,24 +64,30 @@ function normalizePhotos(photos) {
             result[type] = [
                 photos[type]
             ];
-
         }
 
     });
 
+
     // Vanhan version "sivut"
     if (Array.isArray(photos.sivut)) {
 
-        result.vasen =
-            photos.sivut[0]
-                ? [photos.sivut[0]]
-                : [];
+        if (photos.sivut[0]) {
 
-        result.oikea =
-            photos.sivut[1]
-                ? [photos.sivut[1]]
-                : [];
+            result.vasen = [
+                photos.sivut[0]
+            ];
+        }
+
+
+        if (photos.sivut[1]) {
+
+            result.oikea = [
+                photos.sivut[1]
+            ];
+        }
     }
+
 
     return result;
 }
@@ -96,21 +103,47 @@ function getPhotoCount(photos) {
         return 0;
     }
 
+
     return Object.values(photos)
-        .reduce((total, group) => {
+        .reduce(
+            (total, group) => {
 
-            if (!Array.isArray(group)) {
-                return total;
-            }
+                if (!Array.isArray(group)) {
+                    return total;
+                }
 
-            return total + group.length;
+                return total + group.length;
 
-        }, 0);
+            },
+            0
+        );
 }
 
 
 // ============================
-// LADAA
+// ONKO KAIKKI 5 KUVAA?
+// ============================
+
+function hasAllFivePhotos(photos) {
+
+    if (!photos) {
+        return false;
+    }
+
+
+    return photoTypes.every(
+        type =>
+            Array.isArray(
+                photos[type]
+            )
+            &&
+            photos[type].length > 0
+    );
+}
+
+
+// ============================
+// LATAA SIIRROT
 // ============================
 
 function loadTransfers() {
@@ -120,6 +153,7 @@ function loadTransfers() {
             "siirtoAppTransfers"
         );
 
+
     if (saved) {
 
         try {
@@ -127,28 +161,33 @@ function loadTransfers() {
             transfers =
                 JSON.parse(saved);
 
+
             transfers =
-                transfers.map(transfer => ({
+                transfers.map(
+                    transfer => ({
 
-                    ...transfer,
+                        ...transfer,
 
-                    beforePhotos:
-                        normalizePhotos(
-                            transfer.beforePhotos
-                        ),
+                        beforePhotos:
+                            normalizePhotos(
+                                transfer.beforePhotos
+                            ),
 
-                    afterPhotos:
-                        normalizePhotos(
-                            transfer.afterPhotos
-                        )
+                        afterPhotos:
+                            normalizePhotos(
+                                transfer.afterPhotos
+                            )
 
-                }));
+                    })
+                );
+
 
         } catch {
 
             transfers = [];
         }
     }
+
 
     renderTransfers();
 
@@ -170,25 +209,37 @@ function saveTransfers() {
 
 
 // ============================
-// UUSI SIIRTO
+// AVAA UUSI SIIRTO
 // ============================
 
 function openForm() {
 
     document
-        .getElementById("formModal")
-        .classList.add("active");
+        .getElementById(
+            "formModal"
+        )
+        .classList.add(
+            "active"
+        );
+
 
     const now =
         new Date();
 
-    document.getElementById("date").value =
+
+    document.getElementById(
+        "date"
+    ).value =
         now.toISOString()
             .split("T")[0];
 
-    document.getElementById("time").value =
+
+    document.getElementById(
+        "time"
+    ).value =
         now.toTimeString()
             .slice(0, 5);
+
 
     resetBeforePhotos();
 }
@@ -201,12 +252,20 @@ function openForm() {
 function closeForm() {
 
     document
-        .getElementById("formModal")
-        .classList.remove("active");
+        .getElementById(
+            "formModal"
+        )
+        .classList.remove(
+            "active"
+        );
+
 
     document
-        .getElementById("transferForm")
+        .getElementById(
+            "transferForm"
+        )
         .reset();
+
 
     resetBeforePhotos();
 }
@@ -221,32 +280,40 @@ function resetBeforePhotos() {
     beforePhotoData =
         createEmptyPhotos();
 
-    photoTypes.forEach(type => {
 
-        const status =
-            document.getElementById(
-                `before-${type}-status`
-            );
+    photoTypes.forEach(
+        type => {
 
-        if (status) {
+            const status =
+                document.getElementById(
+                    `before-${type}-status`
+                );
 
-            status.textContent =
-                "Ei kuvaa";
 
-            status.classList.remove(
-                "has-photo"
-            );
+            if (status) {
+
+                status.textContent =
+                    "Ei kuvaa";
+
+                status.classList.remove(
+                    "has-photo"
+                );
+            }
+
+
+            const input =
+                document.getElementById(
+                    `before-${type}`
+                );
+
+
+            if (input) {
+
+                input.value = "";
+            }
+
         }
-
-        const input =
-            document.getElementById(
-                `before-${type}`
-            );
-
-        if (input) {
-            input.value = "";
-        }
-    });
+    );
 
 
     const preview =
@@ -254,7 +321,9 @@ function resetBeforePhotos() {
             "beforePreview"
         );
 
+
     if (preview) {
+
         preview.innerHTML = "";
     }
 
@@ -277,7 +346,11 @@ function addPhoto(
             `${location}-${type}`
         );
 
-    if (!input || !input.files.length) {
+
+    if (
+        !input ||
+        !input.files.length
+    ) {
         return;
     }
 
@@ -310,7 +383,10 @@ function addPhoto(
             );
 
 
-            if (location === "before") {
+            if (
+                location ===
+                "before"
+            ) {
 
                 updateBeforePhotoCount();
 
@@ -383,7 +459,7 @@ function updatePhotoStatus(
 
 
 // ============================
-// ESITTELYKUVAT
+// ESITYSKUVAT
 // ============================
 
 function renderPhotoPreview(
@@ -412,50 +488,65 @@ function renderPhotoPreview(
     container.innerHTML = "";
 
 
-    photoTypes.forEach(type => {
+    photoTypes.forEach(
+        type => {
 
-        const list =
-            photos[type] || [];
-
-
-        list.forEach(photo => {
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-            item.className =
-                "preview-item";
+            const list =
+                photos[type] || [];
 
 
-            const img =
-                document.createElement(
-                    "img"
-                );
+            list.forEach(
+                photo => {
 
-            img.src =
-                photo;
-
-
-            const label =
-                document.createElement(
-                    "span"
-                );
-
-            label.textContent =
-                photoNames[type];
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
 
 
-            item.appendChild(img);
+                    item.className =
+                        "preview-item";
 
-            item.appendChild(label);
 
-            container.appendChild(item);
+                    const img =
+                        document.createElement(
+                            "img"
+                        );
 
-        });
 
-    });
+                    img.src =
+                        photo;
+
+
+                    const label =
+                        document.createElement(
+                            "span"
+                        );
+
+
+                    label.textContent =
+                        photoNames[type];
+
+
+                    item.appendChild(
+                        img
+                    );
+
+
+                    item.appendChild(
+                        label
+                    );
+
+
+                    container.appendChild(
+                        item
+                    );
+
+                }
+            );
+
+        }
+    );
 }
 
 
@@ -521,16 +612,22 @@ function updateAfterPhotoCount() {
     }
 
 
-    if (count === 5) {
+    if (
+        hasAllFivePhotos(
+            afterPhotoData
+        )
+    ) {
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
         button.textContent =
             "✅ Lopeta siirto";
 
     } else {
 
-        button.disabled = true;
+        button.disabled =
+            true;
 
         button.textContent =
             `📸 Lisää kaikki kuvat (${count}/5)`;
@@ -539,16 +636,32 @@ function updateAfterPhotoCount() {
 
 
 // ============================
-// LISÄÄ SIIRTO
+// UUDEN SIIRRON TALLENNUS
 // ============================
 
 document
-    .getElementById("transferForm")
+    .getElementById(
+        "transferForm"
+    )
     .addEventListener(
         "submit",
         function (event) {
 
             event.preventDefault();
+
+
+            if (
+                !hasAllFivePhotos(
+                    beforePhotoData
+                )
+            ) {
+
+                alert(
+                    "Ota kaikki 5 kuvaa ennen siirron lisäämistä."
+                );
+
+                return;
+            }
 
 
             const transfer = {
@@ -620,7 +733,10 @@ document
 
                 createdAt:
                     new Date()
-                        .toISOString()
+                        .toISOString(),
+
+                completedAt:
+                    null
 
             };
 
@@ -671,62 +787,77 @@ function renderTransfers() {
 
     const filtered =
         transfers
-            .filter(transfer => {
+            .filter(
+                transfer => {
 
-                const customer =
-                    transfer.customer || "";
+                    const customer =
+                        transfer.customer ||
+                        "";
 
-                const from =
-                    transfer.from || "";
+                    const from =
+                        transfer.from ||
+                        "";
 
-                const to =
-                    transfer.to || "";
+                    const to =
+                        transfer.to ||
+                        "";
 
-                const vehicle =
-                    transfer.vehicle || "";
-
-
-                const matchesSearch =
-
-                    customer
-                        .toLowerCase()
-                        .includes(search)
-
-                    ||
-
-                    from
-                        .toLowerCase()
-                        .includes(search)
-
-                    ||
-
-                    to
-                        .toLowerCase()
-                        .includes(search)
-
-                    ||
-
-                    vehicle
-                        .toLowerCase()
-                        .includes(search);
+                    const vehicle =
+                        transfer.vehicle ||
+                        "";
 
 
-                const matchesFilter =
+                    const matchesSearch =
 
-                    filter === "all"
+                        customer
+                            .toLowerCase()
+                            .includes(
+                                search
+                            )
 
-                    ||
+                        ||
 
-                    transfer.status ===
-                    filter;
+                        from
+                            .toLowerCase()
+                            .includes(
+                                search
+                            )
+
+                        ||
+
+                        to
+                            .toLowerCase()
+                            .includes(
+                                search
+                            )
+
+                        ||
+
+                        vehicle
+                            .toLowerCase()
+                            .includes(
+                                search
+                            );
 
 
-                return (
-                    matchesSearch &&
-                    matchesFilter
-                );
+                    const matchesFilter =
 
-            })
+                        filter ===
+                        "all"
+
+                        ||
+
+                        transfer.status ===
+                        filter;
+
+
+                    return (
+                        matchesSearch &&
+                        matchesFilter
+                    );
+
+                }
+            )
             .sort(
                 (a, b) =>
                     b.id - a.id
@@ -741,7 +872,9 @@ function renderTransfers() {
 
                 <div>🚗</div>
 
-                <h3>Ei siirtoja</h3>
+                <h3>
+                    Ei siirtoja
+                </h3>
 
                 <p>
                     Lisää ensimmäinen siirto
@@ -783,6 +916,7 @@ function createTransferCard(
 
         completed:
             "Valmis"
+
     };
 
 
@@ -810,7 +944,10 @@ function createTransferCard(
 
                 </div>
 
-                <span class="status ${transfer.status}">
+
+                <span
+                    class="status ${transfer.status}"
+                >
 
                     ${statusNames[
         transfer.status
@@ -875,10 +1012,12 @@ function createTransferCard(
         )}
                 </span>
 
+
                 <span>
                     🕐
                     ${transfer.time}
                 </span>
+
 
                 ${transfer.vehicle
             ?
@@ -894,6 +1033,7 @@ function createTransferCard(
             ""
         }
 
+
                 <span>
                     📸
                     ${photoCount} kuvaa
@@ -906,7 +1046,9 @@ function createTransferCard(
 
                 <button
                     class="action-btn primary"
-                    onclick="showDetails(${transfer.id})"
+                    onclick="showDetails(
+                        ${transfer.id}
+                    )"
                 >
                     👁️ Avaa
                 </button>
@@ -914,14 +1056,19 @@ function createTransferCard(
 
                 <button
                     class="action-btn"
-                    onclick="openMaps(${transfer.id})"
+                    onclick="openMaps(
+                        ${transfer.id}
+                    )"
                 >
                     🗺️ Reitti
                 </button>
 
 
-                ${transfer.status === "planned"
+                ${transfer.status ===
+            "planned"
+
             ?
+
             `
                     <button
                         class="action-btn"
@@ -933,29 +1080,40 @@ function createTransferCard(
                         🚗 Aloita ajo
                     </button>
                     `
+
             :
+
             ""
         }
 
 
-                ${transfer.status === "driving"
+                ${transfer.status ===
+            "driving"
+
             ?
+
             `
                     <button
                         class="action-btn finish-action"
-                        onclick="openFinishModal(${transfer.id})"
+                        onclick="openFinishModal(
+                            ${transfer.id}
+                        )"
                     >
                         🏁 Lopeta siirto
                     </button>
                     `
+
             :
+
             ""
         }
 
 
                 <button
                     class="action-btn danger"
-                    onclick="deleteTransfer(${transfer.id})"
+                    onclick="deleteTransfer(
+                        ${transfer.id}
+                    )"
                 >
                     🗑️ Poista
                 </button>
@@ -969,7 +1127,7 @@ function createTransferCard(
 
 
 // ============================
-// ALOITA / STATUS
+// ALOITA AJO
 // ============================
 
 function changeStatus(
@@ -990,6 +1148,16 @@ function changeStatus(
 
     transfer.status =
         status;
+
+
+    if (
+        status === "driving"
+    ) {
+
+        transfer.startedAt =
+            new Date()
+                .toISOString();
+    }
 
 
     saveTransfers();
@@ -1054,58 +1222,60 @@ function openFinishModal(id) {
 
 
 // ============================
-// RESET KOHTEEN KUVAT
+// KOHTEEN KUVIEN RESET
 // ============================
 
 function resetAfterPhotoInterface() {
 
-    photoTypes.forEach(type => {
+    photoTypes.forEach(
+        type => {
 
-        const status =
-            document.getElementById(
-                `after-${type}-status`
-            );
-
-
-        if (status) {
-
-            const hasPhoto =
-                afterPhotoData[type] &&
-                afterPhotoData[type].length;
-
-
-            if (hasPhoto) {
-
-                status.textContent =
-                    "✓ Kuva lisätty";
-
-                status.classList.add(
-                    "has-photo"
+            const status =
+                document.getElementById(
+                    `after-${type}-status`
                 );
 
-            } else {
 
-                status.textContent =
-                    "Ei kuvaa";
+            if (status) {
 
-                status.classList.remove(
-                    "has-photo"
-                );
+                const hasPhoto =
+                    afterPhotoData[type] &&
+                    afterPhotoData[type].length;
+
+
+                if (hasPhoto) {
+
+                    status.textContent =
+                        "✓ Kuva lisätty";
+
+                    status.classList.add(
+                        "has-photo"
+                    );
+
+                } else {
+
+                    status.textContent =
+                        "Ei kuvaa";
+
+                    status.classList.remove(
+                        "has-photo"
+                    );
+                }
             }
+
+
+            const input =
+                document.getElementById(
+                    `after-${type}`
+                );
+
+
+            if (input) {
+                input.value = "";
+            }
+
         }
-
-
-        const input =
-            document.getElementById(
-                `after-${type}`
-            );
-
-
-        if (input) {
-            input.value = "";
-        }
-
-    });
+    );
 
 
     renderPhotoPreview(
@@ -1118,7 +1288,7 @@ function resetAfterPhotoInterface() {
 
 
 // ============================
-// LOPETA-MODALIN SULKEMINEN
+// SULJE LOPETUS
 // ============================
 
 function closeFinishModal() {
@@ -1152,13 +1322,11 @@ function finishTransfer() {
     }
 
 
-    const photoCount =
-        getPhotoCount(
+    if (
+        !hasAllFivePhotos(
             afterPhotoData
-        );
-
-
-    if (photoCount !== 5) {
+        )
+    ) {
 
         alert(
             "Ota kaikki 5 kuvaa ennen siirron lopettamista."
@@ -1222,11 +1390,13 @@ function deleteTransfer(id) {
     }
 
 
-    if (
-        !confirm(
+    const confirmed =
+        confirm(
             `Poistetaanko siirto ${transfer.customer}?`
-        )
-    ) {
+        );
+
+
+    if (!confirmed) {
         return;
     }
 
@@ -1458,37 +1628,45 @@ function createDetailsPhotos(
         `<div class="details-photo-grid">`;
 
 
-    photoTypes.forEach(type => {
+    photoTypes.forEach(
+        type => {
 
-        const list =
-            normalized[type] || [];
-
-
-        list.forEach(photo => {
-
-            html += `
-
-                <div class="details-photo-item">
-
-                    <img
-                        src="${photo}"
-                        alt="${photoNames[type]}"
-                    >
-
-                    <span>
-                        ${photoNames[type]}
-                    </span>
-
-                </div>
-
-            `;
-
-        });
-
-    });
+            const list =
+                normalized[type] ||
+                [];
 
 
-    html += `</div>`;
+            list.forEach(
+                photo => {
+
+                    html += `
+
+                        <div
+                            class="details-photo-item"
+                        >
+
+                            <img
+                                src="${photo}"
+                                alt="${photoNames[type]}"
+                            >
+
+                            <span>
+                                ${photoNames[type]}
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+        }
+    );
+
+
+    html +=
+        `</div>`;
 
 
     return html;
@@ -1533,7 +1711,9 @@ function updateDashboard() {
         "todayCount"
     ).textContent =
         transfers.filter(
-            t => t.date === today
+            t =>
+                t.date ===
+                today
         ).length;
 
 
@@ -1541,7 +1721,9 @@ function updateDashboard() {
         "activeCount"
     ).textContent =
         transfers.filter(
-            t => t.status === "driving"
+            t =>
+                t.status ===
+                "driving"
         ).length;
 
 
@@ -1549,7 +1731,9 @@ function updateDashboard() {
         "completedCount"
     ).textContent =
         transfers.filter(
-            t => t.status === "completed"
+            t =>
+                t.status ===
+                "completed"
         ).length;
 }
 
@@ -1569,7 +1753,14 @@ function formatDate(date) {
         date.split("-");
 
 
-    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    return `
+        ${parts[2]}.
+        ${parts[1]}.
+        ${parts[0]}
+    `.replace(
+        /\s/g,
+        ""
+    );
 }
 
 
